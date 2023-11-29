@@ -17,14 +17,28 @@
  */
 package es.uvigo.esei.dai.hybridserver;
 
+import es.uvigo.esei.dai.hybridserver.configuration.Configuration;
+import es.uvigo.esei.dai.hybridserver.dao.PageController;
+import es.uvigo.esei.dai.hybridserver.dao.HTMLDaoDB;
+import es.uvigo.esei.dai.hybridserver.dao.XMLDaoDB;
+import es.uvigo.esei.dai.hybridserver.dao.XSDDaoDB;
+import es.uvigo.esei.dai.hybridserver.dao.xslt.XSLTController;
+import es.uvigo.esei.dai.hybridserver.dao.xslt.XSLTDaoDB;
+import es.uvigo.esei.dai.hybridserver.servicethread.ServiceThread;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+/*
+*
+* TODO : Reconstruir contructores para utilizar los loader del ej 5
+*
+*/
 
 public class HybridServer implements AutoCloseable {
 	private final int NUMCLIENTS = 50;
@@ -34,13 +48,13 @@ public class HybridServer implements AutoCloseable {
 	private final String DBPASSWD = "hsdbpass";
 	private Thread serverThread;
 	private boolean stop;
-	private HTMLDao pages;
+	private PageController pagesHTML, pagesXML, pagesXSD;
+	private XSLTController pagesXSLT;
 	private int numClients, httpPort;
 	private String dbURL, dbUser, dbPasswd;
 	private ExecutorService threadPool;
 
 	public HybridServer() {
-
 		this.numClients = NUMCLIENTS;
 		this.httpPort = HTTPPORT;
 		this.dbURL = DBURL;
@@ -49,18 +63,17 @@ public class HybridServer implements AutoCloseable {
 
 		System.out.println("Starting the server with the default parameters");
 
-		this.pages = new HTMLDaoDB(dbURL, dbUser, dbPasswd);
+		this.pagesHTML = new HTMLDaoDB(dbURL, dbUser, dbPasswd);
+		this.pagesXML = new XMLDaoDB(dbURL, dbUser, dbPasswd);
+		this.pagesXSD = new XSDDaoDB(dbURL, dbUser, dbPasswd);
+		this.pagesXSLT = new XSLTDaoDB(dbURL, dbUser, dbPasswd);
 	}
 
-	public HybridServer(Map<String, String> pages) {
-
-		this.numClients = NUMCLIENTS;
-		this.httpPort = HTTPPORT;
-		this.pages = new HTMLDaoMap(pages);
+	public HybridServer(Configuration configuration){
+		// TODO
 	}
 
 	public HybridServer(Properties properties) {
-
 		try {
 			if (!properties.getProperty("numClients").equals("null")){
 				this.numClients = Integer.parseInt(properties.getProperty("numClients"));
@@ -97,7 +110,10 @@ public class HybridServer implements AutoCloseable {
 
 		System.out.println("Starting the server with the configuration parameters");
 
-		this.pages = new HTMLDaoDB(dbURL, dbUser, dbPasswd);
+		this.pagesHTML = new HTMLDaoDB(dbURL, dbUser, dbPasswd);
+		this.pagesXML = new XMLDaoDB(dbURL, dbUser, dbPasswd);
+		this.pagesXSD = new XSDDaoDB(dbURL, dbUser, dbPasswd);
+		this.pagesXSLT = new XSLTDaoDB(dbURL, dbUser, dbPasswd);
 	}
 
 	public int getPort() {
@@ -121,7 +137,7 @@ public class HybridServer implements AutoCloseable {
 						if (stop)
 							break;
 
-						threadPool.execute(new ServiceThread(clientSocket, pages));
+						threadPool.execute(new ServiceThread(clientSocket, pagesHTML, pagesXML, pagesXSD, pagesXSLT));
 					}
 				} catch (IOException e) {
 					System.err.println(e.getMessage());

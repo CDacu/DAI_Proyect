@@ -18,7 +18,6 @@
 package es.uvigo.esei.dai.hybridserver;
 
 import java.io.*;
-import java.util.HashMap;
 import java.util.Properties;
 
 public class Launcher {
@@ -26,14 +25,6 @@ public class Launcher {
 	public static void main(String[] args) {
 
 		HybridServer server = null;
-
-		HashMap<String, String> pages = new HashMap<>();
-
-		pages.put("1234590", "<h1>Prueba1</h1>");
-		pages.put("1234567", "<h1>Prueba2</h1>");
-		pages.put("12345678", "<h1>Prueba3</h1>");
-		pages.put("123456789", "<h1>Prueba4</h1>");
-		pages.put("1234567890", "<h1>Prueba5</h1>");
 
 		if(args.length == 0){
 
