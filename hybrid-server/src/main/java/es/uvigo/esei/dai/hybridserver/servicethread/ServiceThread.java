@@ -3,16 +3,14 @@ package es.uvigo.esei.dai.hybridserver.servicethread;
 import java.io.*;
 import java.net.Socket;
 import es.uvigo.esei.dai.hybridserver.dao.PageController;
-import es.uvigo.esei.dai.hybridserver.dao.xslt.XSLTController;
 import es.uvigo.esei.dai.hybridserver.http.*;
 
 public class ServiceThread implements Runnable {
 
 	private final Socket socket;
-	private final PageController pagesHTML, pagesXML, pagesXSD;
-	private final XSLTController pagesXSLT;
+	private final PageController pagesHTML, pagesXML, pagesXSD, pagesXSLT;
 
-	public ServiceThread(Socket socket, PageController pagesHTML, PageController pagesXML, PageController pagesXSD, XSLTController pagesXSLT) {
+	public ServiceThread(Socket socket, PageController pagesHTML, PageController pagesXML, PageController pagesXSD, PageController pagesXSLT) {
 		this.socket = socket;
 		this.pagesHTML = pagesHTML;
 		this.pagesXML = pagesXML;
@@ -58,23 +56,24 @@ public class ServiceThread implements Runnable {
 				}else{
 					switch (request.getResourceName()){
 						case "html":
-							ServiceThreadHMTL serviceThreadHMTL = new ServiceThreadHMTL(socket, pagesHTML);
+							ServiceThreadHMTL serviceThreadHMTL = new ServiceThreadHMTL(socket, pagesHTML, response, request, contentBuilder);
 							serviceThreadHMTL.run();
 							break;
 
 						case "xml":
-							ServiceThreadXML serviceThreadXML = new ServiceThreadXML(socket, pagesXML);
+							ServiceThreadXML serviceThreadXML = new ServiceThreadXML(socket, pagesXML, response, request, contentBuilder);
 							serviceThreadXML.run();
 							break;
 
 						case "xsd":
-							ServiceThreadXSD serviceThreadXSD = new ServiceThreadXSD(socket, pagesXSD);
+							ServiceThreadXSD serviceThreadXSD = new ServiceThreadXSD(socket, pagesXSD, response, request, contentBuilder);
 							serviceThreadXSD.run();
 							break;
 
 						case "xslt":
-							ServiceThreadXSLT serviceThreadXSLT = new ServiceThreadXSLT(socket, pagesXSLT);
+							ServiceThreadXSLT serviceThreadXSLT = new ServiceThreadXSLT(socket, pagesXSLT, response, request, contentBuilder);
 							serviceThreadXSLT.run();
+							// TODO : No esta implementado
 							break;
 
 						default:
@@ -83,6 +82,9 @@ public class ServiceThread implements Runnable {
 					}
 				}
 			}
+
+			// TODO : Cuando se coloca cada una de las cabeceras MIME ¿?¿?
+			// APPLICATION_XML, FORM, TEXT_HTML
 			response.putParameter("Content-Type", "text/html");
 			contentBuilder.append("</body>");
 			contentBuilder.append("</html>");

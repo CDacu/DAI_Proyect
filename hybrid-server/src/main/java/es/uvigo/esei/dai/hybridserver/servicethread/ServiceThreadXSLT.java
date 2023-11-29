@@ -1,22 +1,13 @@
 package es.uvigo.esei.dai.hybridserver.servicethread;
 
-import es.uvigo.esei.dai.hybridserver.dao.xslt.XSLTController;
-
+import es.uvigo.esei.dai.hybridserver.dao.PageController;
+import es.uvigo.esei.dai.hybridserver.http.HTTPRequest;
+import es.uvigo.esei.dai.hybridserver.http.HTTPResponse;
 import java.net.Socket;
 
-public class ServiceThreadXSLT implements Runnable{
+public class ServiceThreadXSLT extends AbstractServiceThread implements Runnable{
 
-    private final Socket socket;
-
-    private XSLTController pages;
-
-    public ServiceThreadXSLT(Socket socket, XSLTController pages) {
-        this.socket = socket;
-        this.pages = pages;
-    }
-
-    @Override
-    public void run() {
-        // TODO : Implementar GET, POST y DELETE
+    public ServiceThreadXSLT(Socket socket, PageController pages, HTTPResponse response, HTTPRequest request, StringBuilder contentBuilder) {
+        super(socket, pages, response, request, contentBuilder);
     }
 }

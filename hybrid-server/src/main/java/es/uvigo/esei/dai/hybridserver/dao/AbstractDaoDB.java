@@ -26,7 +26,7 @@ public abstract class AbstractDaoDB implements PageController{
 
             try (PreparedStatement statement = connection.prepareStatement("SELECT content FROM "+ type.getType() +" WHERE uuid=?")) {
 
-                String content = "";
+                String content;
 
                 statement.setString(1, uuid);
 
@@ -44,7 +44,6 @@ public abstract class AbstractDaoDB implements PageController{
             } catch (SQLException e) {
                 throw new RuntimeException("Error getting the content of the uuid: " + uuid, e);
             }
-
         } catch (SQLException e) {
             throw new DatabaseOfflineException("Error trying to establish a connection to the DB", e);
         }
@@ -56,7 +55,7 @@ public abstract class AbstractDaoDB implements PageController{
         try (Connection connection = DriverManager.getConnection(dbURL, dbUser, dbPasswd)) {
 
             try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM "+ type.getType())) {
-                List<String> pages = new ArrayList<String>();
+                List<String> pages = new ArrayList<>();
 
                 ResultSet result = statement.executeQuery();
                 while (result.next()) {
@@ -119,5 +118,9 @@ public abstract class AbstractDaoDB implements PageController{
         } catch (SQLException e) {
             throw new DatabaseOfflineException("Error trying to establish a connection to the DB", e);
         }
+    }
+
+    public String getXSD(String uuid) throws PageNotFoundException, DatabaseOfflineException {
+        return null;
     }
 }

@@ -22,10 +22,8 @@ import es.uvigo.esei.dai.hybridserver.dao.PageController;
 import es.uvigo.esei.dai.hybridserver.dao.HTMLDaoDB;
 import es.uvigo.esei.dai.hybridserver.dao.XMLDaoDB;
 import es.uvigo.esei.dai.hybridserver.dao.XSDDaoDB;
-import es.uvigo.esei.dai.hybridserver.dao.xslt.XSLTController;
-import es.uvigo.esei.dai.hybridserver.dao.xslt.XSLTDaoDB;
+import es.uvigo.esei.dai.hybridserver.dao.XSLTDaoDB;
 import es.uvigo.esei.dai.hybridserver.servicethread.ServiceThread;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -48,8 +46,7 @@ public class HybridServer implements AutoCloseable {
 	private final String DBPASSWD = "hsdbpass";
 	private Thread serverThread;
 	private boolean stop;
-	private PageController pagesHTML, pagesXML, pagesXSD;
-	private XSLTController pagesXSLT;
+	private PageController pagesHTML, pagesXML, pagesXSD, pagesXSLT;
 	private int numClients, httpPort;
 	private String dbURL, dbUser, dbPasswd;
 	private ExecutorService threadPool;
