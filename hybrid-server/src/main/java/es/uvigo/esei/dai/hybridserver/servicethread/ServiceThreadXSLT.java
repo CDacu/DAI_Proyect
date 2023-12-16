@@ -3,10 +3,7 @@ package es.uvigo.esei.dai.hybridserver.servicethread;
 import es.uvigo.esei.dai.hybridserver.configuration.Configuration;
 import es.uvigo.esei.dai.hybridserver.exception.DatabaseOfflineException;
 import es.uvigo.esei.dai.hybridserver.exception.PageNotFoundException;
-import es.uvigo.esei.dai.hybridserver.http.HTTPRequest;
-import es.uvigo.esei.dai.hybridserver.http.HTTPResourceName;
-import es.uvigo.esei.dai.hybridserver.http.HTTPResponse;
-import es.uvigo.esei.dai.hybridserver.http.HTTPResponseStatus;
+import es.uvigo.esei.dai.hybridserver.http.*;
 
 import java.net.Socket;
 
@@ -23,6 +20,8 @@ public class ServiceThreadXSLT extends AbstractServiceThread implements Runnable
             String pageContent = pages.get(request.getResourceParameters().get("uuid"), type);
             response.setStatus(HTTPResponseStatus.S200);
             contentBuilder.append(pageContent);
+            response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(),MIME.APPLICATION_XML.getMime());
+
         } catch (PageNotFoundException e) {
             response.setStatus(HTTPResponseStatus.S404);
             contentBuilder.append("<h2>Page not Found</h2>");
