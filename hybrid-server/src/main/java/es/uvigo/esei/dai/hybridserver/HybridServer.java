@@ -46,12 +46,6 @@ public class HybridServer implements AutoCloseable {
 		System.out.println("Starting the server with the configuration parameters");
 	}
 
-//	public HybridServer(Map<String, String> pages) {
-//		this.numClients = NUMCLIENTS;
-//		this.httpPort = HTTPPORT;
-//		this.pages = new HTMLDaoMap(pages);
-//	}
-
 	public HybridServer(Properties properties) {
 
 		// Ñapa para poder utilizar los test de la semana 3 y 7
@@ -114,7 +108,6 @@ public class HybridServer implements AutoCloseable {
 
 		this.stop = false;
 		this.serverThread.start();
-
 	}
 
 	@Override
