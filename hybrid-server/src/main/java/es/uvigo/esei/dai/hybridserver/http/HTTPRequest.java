@@ -17,12 +17,12 @@
  */
 package es.uvigo.esei.dai.hybridserver.http;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.io.BufferedReader;
 
 public class HTTPRequest {
 
@@ -68,8 +68,7 @@ public class HTTPRequest {
 		mthdTemp = reqTemp[0]; // First field before the blank space. => Method
 
 		switch (mthdTemp) {
-
-		case "HEAD":
+			case "HEAD":
 			this.method = HTTPRequestMethod.HEAD;
 			break;
 

@@ -1,6 +1,6 @@
-package es.uvigo.esei.dai.hybridserver.dao;
+package es.uvigo.esei.dai.hybridserver.http;
 
-public enum DBType {
+public enum HTTPResourceName {
 
     HTML("HTML"),
     XML("XML"),
@@ -9,7 +9,7 @@ public enum DBType {
 
     private final String type;
 
-    DBType(String type) {
+    HTTPResourceName(String type) {
         this.type = type;
     }
 

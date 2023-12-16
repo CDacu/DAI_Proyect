@@ -2,29 +2,29 @@ package es.uvigo.esei.dai.hybridserver.dao;
 
 import es.uvigo.esei.dai.hybridserver.exception.DatabaseOfflineException;
 import es.uvigo.esei.dai.hybridserver.exception.PageNotFoundException;
+import es.uvigo.esei.dai.hybridserver.http.HTTPResourceName;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public abstract class AbstractDaoDB implements PageController{
+public abstract class AbstractDaoDB {
     protected String dbURL, dbUser, dbPasswd;
-    protected DBType type;
+    protected HTTPResourceName type;
 
-    public AbstractDaoDB(String dbURL, String dbUser, String dbPasswd, DBType type) {
+    public AbstractDaoDB(String dbURL, String dbUser, String dbPasswd, HTTPResourceName type) {
         this.dbURL = dbURL;
         this.dbUser = dbUser;
         this.dbPasswd = dbPasswd;
         this.type = type;
     }
 
-    @Override
-    public String get(String uuid) throws PageNotFoundException, DatabaseOfflineException {
+    public String get(String uuid, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException {
 
         try (Connection connection = DriverManager.getConnection(dbURL, dbUser, dbPasswd)) {
 
-            try (PreparedStatement statement = connection.prepareStatement("SELECT content FROM "+ type.getType() +" WHERE uuid=?")) {
+            try (PreparedStatement statement = connection.prepareStatement("SELECT content FROM "+ table.getType() +" WHERE uuid=?")) {
 
                 String content;
 
@@ -49,7 +49,6 @@ public abstract class AbstractDaoDB implements PageController{
         }
     }
 
-    @Override
     public List<String> list() throws DatabaseOfflineException {
 
         try (Connection connection = DriverManager.getConnection(dbURL, dbUser, dbPasswd)) {
@@ -72,7 +71,6 @@ public abstract class AbstractDaoDB implements PageController{
         }
     }
 
-    @Override
     public void delete(String uuid) throws DatabaseOfflineException, PageNotFoundException {
 
         try (Connection connection = DriverManager.getConnection(dbURL, dbUser, dbPasswd)) {
@@ -92,7 +90,6 @@ public abstract class AbstractDaoDB implements PageController{
         }
     }
 
-    @Override
     public String create(String content) throws DatabaseOfflineException {
 
         try (Connection connection = DriverManager.getConnection(dbURL, dbUser, dbPasswd)) {
@@ -120,7 +117,9 @@ public abstract class AbstractDaoDB implements PageController{
         }
     }
 
-    public String getXSD(String uuid) throws PageNotFoundException, DatabaseOfflineException {
+    // Este no tienen implementacion por defecto, dado que unicamente deben ser usados en XSLT
+
+    public String create(String xsd, String content) throws DatabaseOfflineException {
         return null;
     }
 }

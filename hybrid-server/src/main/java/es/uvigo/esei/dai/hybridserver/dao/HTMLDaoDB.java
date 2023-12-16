@@ -1,7 +1,10 @@
 package es.uvigo.esei.dai.hybridserver.dao;
 
-public class HTMLDaoDB extends AbstractDaoDB implements PageController {
-	public HTMLDaoDB(String dbURL, String dbUser, String dbPasswd) {
-		super(dbURL, dbUser, dbPasswd, DBType.HTML);
+import es.uvigo.esei.dai.hybridserver.configuration.Configuration;
+import es.uvigo.esei.dai.hybridserver.http.HTTPResourceName;
+
+public class HTMLDaoDB extends AbstractDaoDB {
+	public HTMLDaoDB(Configuration configuration) {
+		super(configuration.getDbURL(), configuration.getDbUser(), configuration.getDbPassword(), HTTPResourceName.HTML);
 	}
 }

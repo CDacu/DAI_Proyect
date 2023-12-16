@@ -1,21 +1,19 @@
 package es.uvigo.esei.dai.hybridserver.servicethread;
 
+import es.uvigo.esei.dai.hybridserver.configuration.Configuration;
+import es.uvigo.esei.dai.hybridserver.http.*;
+
 import java.io.*;
 import java.net.Socket;
-import es.uvigo.esei.dai.hybridserver.dao.PageController;
-import es.uvigo.esei.dai.hybridserver.http.*;
 
 public class ServiceThread implements Runnable {
 
 	private final Socket socket;
-	private final PageController pagesHTML, pagesXML, pagesXSD, pagesXSLT;
+	Configuration configuration;
 
-	public ServiceThread(Socket socket, PageController pagesHTML, PageController pagesXML, PageController pagesXSD, PageController pagesXSLT) {
+	public ServiceThread(Socket socket, Configuration configuration) {
 		this.socket = socket;
-		this.pagesHTML = pagesHTML;
-		this.pagesXML = pagesXML;
-		this.pagesXSD = pagesXSD;
-		this.pagesXSLT = pagesXSLT;
+		this.configuration = configuration;
 	}
 
 	public void run(){
@@ -39,6 +37,9 @@ public class ServiceThread implements Runnable {
 			contentBuilder.append("<body>");
 			contentBuilder.append("<h1>Hybrid Server</h1>");
 
+			// TODO: Cuando se coloca cada uno de los MIME ¿?¿?
+			response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(), MIME.TEXT_HTML.getMime());
+
 			try  {
 				request = new HTTPRequest(reader);
 
@@ -54,26 +55,26 @@ public class ServiceThread implements Runnable {
 					contentBuilder.append("<h2>Author</h2><a>Carlos Dacunha Gonzalez</a>");
 
 				}else{
+					AbstractServiceThread serviceThread;
 					switch (request.getResourceName()){
 						case "html":
-							ServiceThreadHMTL serviceThreadHMTL = new ServiceThreadHMTL(socket, pagesHTML, response, request, contentBuilder);
-							serviceThreadHMTL.run();
+							serviceThread = new ServiceThreadHMTL(socket, configuration, response, request, contentBuilder);
+							serviceThread.run();
 							break;
 
 						case "xml":
-							ServiceThreadXML serviceThreadXML = new ServiceThreadXML(socket, pagesXML, response, request, contentBuilder);
-							serviceThreadXML.run();
+							serviceThread = new ServiceThreadXML(socket, configuration, response, request, contentBuilder);
+							serviceThread.run();
 							break;
 
 						case "xsd":
-							ServiceThreadXSD serviceThreadXSD = new ServiceThreadXSD(socket, pagesXSD, response, request, contentBuilder);
-							serviceThreadXSD.run();
+							serviceThread = new ServiceThreadXSD(socket, configuration, response, request, contentBuilder);
+							serviceThread.run();
 							break;
 
 						case "xslt":
-							ServiceThreadXSLT serviceThreadXSLT = new ServiceThreadXSLT(socket, pagesXSLT, response, request, contentBuilder);
-							serviceThreadXSLT.run();
-							// TODO : No esta implementado
+							serviceThread = new ServiceThreadXSLT(socket, configuration, response, request, contentBuilder);
+							serviceThread.run();
 							break;
 
 						default:
@@ -83,9 +84,6 @@ public class ServiceThread implements Runnable {
 				}
 			}
 
-			// TODO : Cuando se coloca cada una de las cabeceras MIME ¿?¿?
-			// APPLICATION_XML, FORM, TEXT_HTML
-			response.putParameter("Content-Type", "text/html");
 			contentBuilder.append("</body>");
 			contentBuilder.append("</html>");
 			response.setContent(String.valueOf(contentBuilder));

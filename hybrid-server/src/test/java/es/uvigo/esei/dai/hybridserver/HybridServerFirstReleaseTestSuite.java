@@ -22,9 +22,9 @@ import org.junit.platform.suite.api.Suite;
 
 @Suite
 @SelectClasses({
-  Week1TestSuite.class,
-  Week2TestSuite.class,
-  Week3TestSuite.class
+    Week1TestSuite.class,
+//  Week2TestSuite.class, En esta semana se utiliza el DAO en memoria, que no se require para la entrega final.
+    Week3TestSuite.class
 })
 public class HybridServerFirstReleaseTestSuite {
 }

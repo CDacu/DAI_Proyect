@@ -18,86 +18,67 @@
 package es.uvigo.esei.dai.hybridserver;
 
 import es.uvigo.esei.dai.hybridserver.configuration.Configuration;
-import es.uvigo.esei.dai.hybridserver.dao.PageController;
-import es.uvigo.esei.dai.hybridserver.dao.HTMLDaoDB;
-import es.uvigo.esei.dai.hybridserver.dao.XMLDaoDB;
-import es.uvigo.esei.dai.hybridserver.dao.XSDDaoDB;
-import es.uvigo.esei.dai.hybridserver.dao.XSLTDaoDB;
 import es.uvigo.esei.dai.hybridserver.servicethread.ServiceThread;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-/*
-*
-* TODO : Reconstruir contructores para utilizar los loader del ej 5
-*
-*/
-
 public class HybridServer implements AutoCloseable {
-	private final int NUMCLIENTS = 50;
-	private final int HTTPPORT = 8888;
-	private final String DBURL = "jdbc:mysql://localhost:3306/hstestdb";
-	private final String DBUSER = "hsdb";
-	private final String DBPASSWD = "hsdbpass";
+
 	private Thread serverThread;
 	private boolean stop;
-	private PageController pagesHTML, pagesXML, pagesXSD, pagesXSLT;
-	private int numClients, httpPort;
-	private String dbURL, dbUser, dbPasswd;
+	private final Configuration configuration;
 	private ExecutorService threadPool;
 
 	public HybridServer() {
-		this.numClients = NUMCLIENTS;
-		this.httpPort = HTTPPORT;
-		this.dbURL = DBURL;
-		this.dbUser = DBUSER;
-		this.dbPasswd = DBPASSWD;
-
+		this.configuration = new Configuration();
 		System.out.println("Starting the server with the default parameters");
-
-		this.pagesHTML = new HTMLDaoDB(dbURL, dbUser, dbPasswd);
-		this.pagesXML = new XMLDaoDB(dbURL, dbUser, dbPasswd);
-		this.pagesXSD = new XSDDaoDB(dbURL, dbUser, dbPasswd);
-		this.pagesXSLT = new XSLTDaoDB(dbURL, dbUser, dbPasswd);
 	}
 
 	public HybridServer(Configuration configuration){
-		// TODO
+		this.configuration = configuration;
+		System.out.println("Starting the server with the configuration parameters");
 	}
 
+//	public HybridServer(Map<String, String> pages) {
+//		this.numClients = NUMCLIENTS;
+//		this.httpPort = HTTPPORT;
+//		this.pages = new HTMLDaoMap(pages);
+//	}
+
 	public HybridServer(Properties properties) {
+
+		// Ñapa para poder utilizar los test de la semana 3 y 7
+		// Convierte Properties en Configuration
+
+		int httpPort = 8888;
+		int numClients = 50;
+		String dbURL = "jdbc:mysql://localhost:3306/hstestdb";
+		String dbUser = "hsdb";
+		String dbPasswd = "hsdbpass";
+
 		try {
 			if (!properties.getProperty("numClients").equals("null")){
-				this.numClients = Integer.parseInt(properties.getProperty("numClients"));
-			}else{
-				this.numClients = NUMCLIENTS;
+				numClients = Integer.parseInt(properties.getProperty("numClients"));
 			}
 			if (!properties.getProperty("port").equals("null")){
-				this.httpPort = Integer.parseInt(properties.getProperty("port"));
-			}else{
-				this.httpPort = HTTPPORT;
+				httpPort = Integer.parseInt(properties.getProperty("port"));
 			}
 			if (!properties.getProperty("db.url").equals("null")){
-				this.dbURL = properties.getProperty("db.url");
-			}else{
-				this.dbURL = DBURL;
+				dbURL = properties.getProperty("db.url");
 			}
 			if (!properties.getProperty("db.user").equals("null")){
-				this.dbUser = properties.getProperty("db.user");
-			}else{
-				this.dbUser = DBUSER;
+				dbUser = properties.getProperty("db.user");
 			}
 			if (!properties.getProperty("db.password").equals("null")){
-				this.dbPasswd = properties.getProperty("db.password");
-			}else{
-				this.dbPasswd = DBPASSWD;
+				dbPasswd = properties.getProperty("db.password");
 			}
-
 		} catch (Exception e) {
 			System.err.println("An error ocurred loading the configuration parameters");
 			e.printStackTrace();
@@ -105,41 +86,29 @@ public class HybridServer implements AutoCloseable {
 			System.exit(1);
         }
 
+		this.configuration = new Configuration(httpPort, numClients, null, dbUser, dbPasswd, dbURL, new ArrayList<>());
 		System.out.println("Starting the server with the configuration parameters");
-
-		this.pagesHTML = new HTMLDaoDB(dbURL, dbUser, dbPasswd);
-		this.pagesXML = new XMLDaoDB(dbURL, dbUser, dbPasswd);
-		this.pagesXSD = new XSDDaoDB(dbURL, dbUser, dbPasswd);
-		this.pagesXSLT = new XSLTDaoDB(dbURL, dbUser, dbPasswd);
 	}
 
 	public int getPort() {
-		return this.httpPort;
+		return this.configuration.getHttpPort();
 	}
 
 	public void start() {
-
 		this.serverThread = new Thread() {
 			@Override
 			public void run() {
-
-				try (final ServerSocket serverSocket = new ServerSocket(httpPort)) {
-
-					threadPool = Executors.newFixedThreadPool(numClients);
-
+				try (final ServerSocket serverSocket = new ServerSocket(configuration.getHttpPort())) {
+					threadPool = Executors.newFixedThreadPool(configuration.getNumClients());
 					while (true) {
-
 						Socket clientSocket = serverSocket.accept();
-
 						if (stop)
 							break;
-
-						threadPool.execute(new ServiceThread(clientSocket, pagesHTML, pagesXML, pagesXSD, pagesXSLT));
+						threadPool.execute(new ServiceThread(clientSocket, configuration));
 					}
 				} catch (IOException e) {
 					System.err.println(e.getMessage());
 				}
-
 			}
 		};
 
@@ -152,7 +121,7 @@ public class HybridServer implements AutoCloseable {
 	public void close() {
 		this.stop = true;
 
-		try (Socket socket = new Socket("localhost", this.httpPort)) {
+		try (Socket socket = new Socket("localhost", this.configuration.getHttpPort())) {
 			// Esta conexión se hace, simplemente, para "despertar" el hilo servidor
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -165,7 +134,6 @@ public class HybridServer implements AutoCloseable {
 		}
 
 		this.serverThread = null;
-
 		threadPool.shutdownNow();
 
 		try {

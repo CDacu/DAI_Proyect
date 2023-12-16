@@ -1,7 +1,10 @@
 package es.uvigo.esei.dai.hybridserver.dao;
 
-public class XSDDaoDB extends AbstractDaoDB implements PageController {
-    public XSDDaoDB(String dbURL, String dbUser, String dbPasswd) {
-        super(dbURL, dbUser, dbPasswd, DBType.XSD);
+import es.uvigo.esei.dai.hybridserver.configuration.Configuration;
+import es.uvigo.esei.dai.hybridserver.http.HTTPResourceName;
+
+public class XSDDaoDB extends AbstractDaoDB {
+    public XSDDaoDB(Configuration configuration) {
+        super(configuration.getDbURL(), configuration.getDbUser(), configuration.getDbPassword(), HTTPResourceName.XSD);
     }
 }
