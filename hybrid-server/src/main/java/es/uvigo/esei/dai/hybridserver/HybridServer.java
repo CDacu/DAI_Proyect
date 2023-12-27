@@ -48,8 +48,7 @@ public class HybridServer implements AutoCloseable {
 
 	public HybridServer(Properties properties) {
 
-		// Ñapa para poder utilizar los test de la semana 3 y 7
-		// Convierte Properties en Configuration
+        // Convierte Properties en Configuration (test de la semana 3 y 7)
 
 		int httpPort = 8888;
 		int numClients = 50;

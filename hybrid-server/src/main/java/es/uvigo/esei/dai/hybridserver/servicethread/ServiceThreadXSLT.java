@@ -12,70 +12,109 @@ public class ServiceThreadXSLT extends AbstractServiceThread implements Runnable
         super(socket, configuration, response, request, contentBuilder, HTTPResourceName.XSLT);
     }
 
-    protected void executeGETwithUUID() {
+    public void run() {
+        switch (request.getMethod()) {
+            case GET:
+                if (request.getResourceParameters().get("uuid") != null) {
+                    executeGETwithUUID();
+                } else {
+                    openHTMLHeader();
+                    executeGETwithoutUUID();
+                    closeHTMLHeader();
+                }
+                break;
 
-        // TODO : Por implementar (Es necesario dar algun formato ¿?, añadir info de xsd ¿?, algo distinto¿?)
+            case POST:
+                executePOST();
+                break;
+
+            case DELETE:
+                openHTMLHeader();
+                executeDELETE();
+                closeHTMLHeader();
+                break;
+
+            default:
+                openHTMLHeader();
+                executeDefault();
+                closeHTMLHeader();
+        }
+    }
+
+    protected void executeGETwithUUID() {
 
         try {
             String pageContent = pages.get(request.getResourceParameters().get("uuid"), type);
             response.setStatus(HTTPResponseStatus.S200);
+            response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(), MIME.APPLICATION_XML.getMime());
             contentBuilder.append(pageContent);
-            response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(),MIME.APPLICATION_XML.getMime());
 
         } catch (PageNotFoundException e) {
             response.setStatus(HTTPResponseStatus.S404);
+            openHTMLHeader();
             contentBuilder.append("<h2>Page not Found</h2>");
+            closeHTMLHeader();
 
         } catch (DatabaseOfflineException e) {
             response.setStatus(HTTPResponseStatus.S500);
+            openHTMLHeader();
             contentBuilder.append("<h2>Database is offline</h2>");
+            closeHTMLHeader();
 
         } catch (RuntimeException e) {
             response.setStatus(HTTPResponseStatus.S500);
+            openHTMLHeader();
             contentBuilder.append("<h2>Something went wrong with the database</h2>");
+            closeHTMLHeader();
         }
     }
 
     protected void executePOST() {
-        String pageContent = request.getResourceParameters().get(type.getType().toLowerCase());
+        String pageContent = request.getResourceParameters().get("xslt");
         String xsd = request.getResourceParameters().get("xsd");
         String uuidPage;
 
         if (pageContent == null || xsd == null) {
             response.setStatus(HTTPResponseStatus.S400);
+            openHTMLHeader();
             contentBuilder.append("<h2>Bad Request</h2>");
+            closeHTMLHeader();
         } else {
             boolean valid = false;
             try {
-                String xsdContent = pages.get("xsd", HTTPResourceName.XSD);
-
-                // TODO : EL XSD DEBERIA VALIDARSE (QUE CORRESPONDA AL XSLT A AÑADIR) ¿?¿?
-
+                String xsdContent = pages.getXSDUUID(xsd, HTTPResourceName.XSLT);
                 valid = true;
             } catch (PageNotFoundException e) {
                 response.setStatus(HTTPResponseStatus.S404);
+                openHTMLHeader();
                 contentBuilder.append("<h2>Page not found</h2>");
+                closeHTMLHeader();
 
             } catch (DatabaseOfflineException e) {
                 response.setStatus(HTTPResponseStatus.S500);
+                openHTMLHeader();
                 contentBuilder.append("<h2>DataBase is offline</h2>");
+                closeHTMLHeader();
             }
 
             if (valid) {
                 try {
                     uuidPage = pages.create(xsd, pageContent);
                     response.setStatus(HTTPResponseStatus.S200);
-                    contentBuilder.append("<li><a href=\"http://localhost:").append(this.socket.getLocalPort())
-                            .append("/").append(type.getType().toLowerCase()).append("?uuid=").append(uuidPage)
-                            .append("\">").append(uuidPage).append("</a></li>");
+                    String hyperlink = "<a href=\"" + type.getType().toLowerCase() + "?uuid=" + uuidPage + "\">" + uuidPage + "</a>";
+                    contentBuilder.append(hyperlink);
 
                 } catch (DatabaseOfflineException e) {
                     response.setStatus(HTTPResponseStatus.S500);
+                    openHTMLHeader();
                     contentBuilder.append("<h2>Database is offline</h2>");
+                    closeHTMLHeader();
 
                 } catch (RuntimeException edb) {
                     response.setStatus(HTTPResponseStatus.S500);
+                    openHTMLHeader();
                     contentBuilder.append("<h2>Something went wrong with the database</h2>");
+                    closeHTMLHeader();
                 }
             }
         }

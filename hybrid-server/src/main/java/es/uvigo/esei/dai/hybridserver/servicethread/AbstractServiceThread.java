@@ -4,10 +4,7 @@ import es.uvigo.esei.dai.hybridserver.configuration.Configuration;
 import es.uvigo.esei.dai.hybridserver.dao.*;
 import es.uvigo.esei.dai.hybridserver.exception.DatabaseOfflineException;
 import es.uvigo.esei.dai.hybridserver.exception.PageNotFoundException;
-import es.uvigo.esei.dai.hybridserver.http.HTTPRequest;
-import es.uvigo.esei.dai.hybridserver.http.HTTPResourceName;
-import es.uvigo.esei.dai.hybridserver.http.HTTPResponse;
-import es.uvigo.esei.dai.hybridserver.http.HTTPResponseStatus;
+import es.uvigo.esei.dai.hybridserver.http.*;
 
 import java.net.Socket;
 import java.util.List;
@@ -15,7 +12,7 @@ import java.util.List;
 public abstract class AbstractServiceThread implements Runnable{
 
     protected final Socket socket;
-    protected final ServerController pages;
+    protected final DaoDBServerController pages;
     protected final HTTPResponse response;
     protected final HTTPRequest request;
     protected final StringBuilder contentBuilder;
@@ -43,7 +40,7 @@ public abstract class AbstractServiceThread implements Runnable{
                 break;
         }
 
-        this.pages = new ServerController(daoDB, configuration);
+        this.pages = new DaoDBServerController(daoDB, configuration);
         this.response = response;
         this.request = request;
         this.contentBuilder = contentBuilder;
@@ -51,24 +48,30 @@ public abstract class AbstractServiceThread implements Runnable{
     }
 
     public void run() {
+
         switch (request.getMethod()){
             case GET:
                 if(request.getResourceParameters().get("uuid") != null){
                     executeGETwithUUID();
                 }else {
+                    openHTMLHeader();
                     executeGETwithoutUUID();
+                    closeHTMLHeader();
                 }
                 break;
             case POST:
-                    executePOST();
-                    break;
-
-            case DELETE:
-                executeDELETE();
+                executePOST();
                 break;
 
+            case DELETE:
+                openHTMLHeader();
+                executeDELETE();
+                closeHTMLHeader();
+                break;
             default:
+                openHTMLHeader();
                 executeDefault();
+                closeHTMLHeader();
         }
     }
 
@@ -80,15 +83,21 @@ public abstract class AbstractServiceThread implements Runnable{
 
         } catch (PageNotFoundException e) {
             response.setStatus(HTTPResponseStatus.S404);
+            openHTMLHeader();
             contentBuilder.append("<h2>Page not Found</h2>");
+            closeHTMLHeader();
 
         } catch (DatabaseOfflineException e) {
             response.setStatus(HTTPResponseStatus.S500);
+            openHTMLHeader();
             contentBuilder.append("<h2>Database is offline</h2>");
+            closeHTMLHeader();
 
         } catch (RuntimeException e){
             response.setStatus(HTTPResponseStatus.S500);
+            openHTMLHeader();
             contentBuilder.append("<h2>Something went wrong with the database</h2>");
+            closeHTMLHeader();
         }
     }
 
@@ -120,22 +129,27 @@ public abstract class AbstractServiceThread implements Runnable{
 
         if(pageContent == null){
             response.setStatus(HTTPResponseStatus.S400);
+            openHTMLHeader();
             contentBuilder.append("<h2>Bad Request</h2>");
+            closeHTMLHeader();
         }else{
             try {
                 uuidPage = pages.create(pageContent);
                 response.setStatus(HTTPResponseStatus.S200);
-                contentBuilder.append("<li><a href=\"http://localhost:").append(this.socket.getLocalPort())
-                        .append("/").append(type.getType().toLowerCase()).append("?uuid=").append(uuidPage)
-                        .append("\">").append(uuidPage).append("</a></li>");
+                String hyperlink = "<a href=\"" + type.getType().toLowerCase() + "?uuid=" + uuidPage + "\">" + uuidPage + "</a>";
+                contentBuilder.append(hyperlink);
 
             }catch( DatabaseOfflineException e) {
                 response.setStatus(HTTPResponseStatus.S500);
+                openHTMLHeader();
                 contentBuilder.append("<h2>Database is offline</h2>");
+                closeHTMLHeader();
 
             }catch( RuntimeException edb) {
                 response.setStatus(HTTPResponseStatus.S500);
+                openHTMLHeader();
                 contentBuilder.append("<h2>Something went wrong with the database</h2>");
+                closeHTMLHeader();
             }
         }
     }
@@ -169,28 +183,16 @@ public abstract class AbstractServiceThread implements Runnable{
     }
 
     protected void executeDefault(){
+        response.setStatus(HTTPResponseStatus.S501);
+        contentBuilder.append("<h2>Not Implemented</h2>");
+    }
 
-        // TODO : Deberia ser cambiado a un 501 Not Implemented ¿?
+    protected void openHTMLHeader() {
+        response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(), MIME.TEXT_HTML.getMime());
+        contentBuilder.append("<html><body><h1>Hybrid Server</h1>");
+    }
 
-        try {
-            List<String> uuids = pages.list();
-            response.setStatus(HTTPResponseStatus.S200);
-            contentBuilder.append("<h2>Existing uuids</h2><ul>");
-
-            for (String uuid : uuids) {
-                contentBuilder.append("<li><a href=\"http://localhost:").append(this.socket.getLocalPort())
-                        .append("/").append(type.getType().toLowerCase()).append("?uuid=").append(uuid)
-                        .append("\">").append(uuid).append("</a></li>");
-            }
-            contentBuilder.append("</ul>");
-
-        }catch( DatabaseOfflineException e){
-            response.setStatus(HTTPResponseStatus.S500);
-            contentBuilder.append("<h2>DataBase is offline</h2>");
-
-        }catch( RuntimeException edb ) {
-            response.setStatus(HTTPResponseStatus.S500);
-            contentBuilder.append("<h2>Something went wrong with the database</h2>");
-        }
+    protected void closeHTMLHeader() {
+        contentBuilder.append("</body></html>");
     }
 }

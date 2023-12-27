@@ -7,12 +7,12 @@ import es.uvigo.esei.dai.hybridserver.http.HTTPResourceName;
 
 import java.util.List;
 
-public class ServerController implements PageController {
+public class DaoDBServerController implements DaoDBController {
 
     AbstractDaoDB page;
     Configuration configuration;
 
-    public ServerController(AbstractDaoDB page, Configuration configuration) {
+    public DaoDBServerController(AbstractDaoDB page, Configuration configuration) {
         this.page = page;
         this.configuration = configuration;
     }
@@ -40,6 +40,11 @@ public class ServerController implements PageController {
     @Override
     public String create(String xsd, String content) throws DatabaseOfflineException {
         return page.create(xsd, content);
+    }
+
+    @Override
+    public String getXSDUUID(String uuid, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException {
+        return page.getXSDUUID(uuid, table);
     }
 
 }

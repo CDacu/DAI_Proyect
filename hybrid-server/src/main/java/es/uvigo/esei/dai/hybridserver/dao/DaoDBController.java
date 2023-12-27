@@ -6,7 +6,7 @@ import es.uvigo.esei.dai.hybridserver.http.HTTPResourceName;
 
 import java.util.List;
 
-public interface PageController {
+public interface DaoDBController {
     String get(String uuid, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException;
 
     List<String> list() throws DatabaseOfflineException;
@@ -16,4 +16,6 @@ public interface PageController {
     String create(String content) throws DatabaseOfflineException;
 
     String create(String xsd, String content) throws DatabaseOfflineException;
+
+    String getXSDUUID(String xslt, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException;
 }

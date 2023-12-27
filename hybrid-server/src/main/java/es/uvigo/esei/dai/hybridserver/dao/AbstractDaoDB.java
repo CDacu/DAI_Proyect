@@ -122,4 +122,33 @@ public abstract class AbstractDaoDB {
     public String create(String xsd, String content) throws DatabaseOfflineException {
         return null;
     }
+
+    public String getXSDUUID(String uuid, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException {
+
+        try (Connection connection = DriverManager.getConnection(dbURL, dbUser, dbPasswd)) {
+
+            try (PreparedStatement statement = connection.prepareStatement("SELECT xsd FROM " + table.getType() + " WHERE xsd=?")) {
+
+                String xsd;
+
+                statement.setString(1, uuid);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+
+                    if (resultSet.next()) {
+                        xsd = resultSet.getString("xsd");
+                    } else {
+                        throw new PageNotFoundException();
+                    }
+                }
+
+                return xsd;
+
+            } catch (SQLException e) {
+                throw new RuntimeException("Error getting the xsd of the uuid: " + uuid, e);
+            }
+        } catch (SQLException e) {
+            throw new DatabaseOfflineException("Error trying to establish a connection to the DB", e);
+        }
+    }
 }

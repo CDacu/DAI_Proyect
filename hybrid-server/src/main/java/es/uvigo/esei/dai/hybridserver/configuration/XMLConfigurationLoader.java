@@ -1,17 +1,17 @@
 /**
  *  HybridServer
  *  Copyright (C) 2023 Miguel Reboiro-Jato
- *  
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class XMLConfigurationLoader {
-  public Configuration load(Reader reader) throws Exception {
+    public Configuration load(Reader reader) throws Exception {
 
     SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
     Schema schema = schemaFactory.newSchema(new File("configuration.xsd"));
@@ -46,7 +46,7 @@ public class XMLConfigurationLoader {
     documentBuilderFactory.setSchema(schema);
 
     DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-    documentBuilder.setErrorHandler(new DefaultHandler()); // TODO : En la resolucion de la Kata6 es SimpleErrorHandler()
+    documentBuilder.setErrorHandler(new DefaultHandler());
 
     Document configuration = documentBuilder.parse(new InputSource(reader));
 
@@ -55,18 +55,32 @@ public class XMLConfigurationLoader {
 
     NodeList serversNode = configuration.getElementsByTagName("servers").item(0).getChildNodes();
     for (int i = 0; i < serversNode.getLength(); i++) {
-      Node serverNode = serversNode.item(i);
-      if(serverNode.getNodeType() == Node.ELEMENT_NODE){
-        serverElement = (Element) serverNode;
-        servers.add(new ServerConfiguration(
-                // TODO : Comprobar que existe
-                serverElement.getAttribute("name"),
-                serverElement.getAttribute("wsdl"),
-                serverElement.getAttribute("namespace"),
-                serverElement.getAttribute("service"),
-                serverElement.getAttribute("httpAddress")
-        ));
-      }
+        Node serverNode = serversNode.item(i);
+        if (serverNode.getNodeType() == Node.ELEMENT_NODE) {
+            serverElement = (Element) serverNode;
+            if (serverElement.getAttribute("name").isEmpty()) {
+                throw new Exception();
+            }
+            if (serverElement.getAttribute("wsdl").isEmpty()) {
+                throw new Exception();
+            }
+            if (serverElement.getAttribute("namespace").isEmpty()) {
+                throw new Exception();
+            }
+            if (serverElement.getAttribute("service").isEmpty()) {
+                throw new Exception();
+            }
+            if (serverElement.getAttribute("httpAddress").isEmpty()) {
+                throw new Exception();
+            }
+            servers.add(new ServerConfiguration(
+                    serverElement.getAttribute("name"),
+                    serverElement.getAttribute("wsdl"),
+                    serverElement.getAttribute("namespace"),
+                    serverElement.getAttribute("service"),
+                    serverElement.getAttribute("httpAddress")
+            ));
+        }
     }
 
     return new Configuration(

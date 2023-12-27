@@ -31,13 +31,6 @@ public class ServiceThread implements Runnable {
 			boolean valid = true;
 
 			response.setVersion(HTTPHeaders.HTTP_1_1.getHeader());
-			contentBuilder.append("<!DOCTYPE html>");
-			contentBuilder.append("<html lang=\"en\">");
-			contentBuilder.append("<head><meta charset=\"UTF-8\"/><title>Hybrid Server</title></head>");
-			contentBuilder.append("<body>");
-			contentBuilder.append("<h1>Hybrid Server</h1>");
-
-			// TODO: Cuando se coloca cada uno de los MIME ¿?¿?
 			response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(), MIME.TEXT_HTML.getMime());
 
 			try  {
@@ -46,13 +39,19 @@ public class ServiceThread implements Runnable {
 			} catch (HTTPParseException e) {
 				valid = false;
 				response.setStatus(HTTPResponseStatus.S400);
+                response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(), MIME.TEXT_HTML.getMime());
+                contentBuilder.append("<html>\n" + "<body>\n" + "<h1>Hybrid Server</h1>\n");
 				contentBuilder.append("<h2>Bad HTTP request</h2>\n");
+                contentBuilder.append("</body>\n" + "</html>");
 			}
 
 			if(valid){
 				if( request.getResourceName().isBlank() ) {
 					response.setStatus(HTTPResponseStatus.S200);
-					contentBuilder.append("<h2>Author</h2><a>Carlos Dacunha Gonzalez</a>");
+                    response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(), MIME.TEXT_HTML.getMime());
+                    contentBuilder.append("<html>\n" + "<body>\n" + "<h1>Hybrid Server</h1>\n");
+                    contentBuilder.append("<h2>Author</h2><a>Carlos Dacunha Gonzalez</a>\n");
+                    contentBuilder.append("</body>\n" + "</html>");
 
 				}else{
 					AbstractServiceThread serviceThread;
@@ -79,13 +78,15 @@ public class ServiceThread implements Runnable {
 
 						default:
 							response.setStatus(HTTPResponseStatus.S400);
-							contentBuilder.append("<h2>Resource name not Valid</h2>");
-					}
+                            response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(), MIME.TEXT_HTML.getMime());
+                            contentBuilder.append("<html>\n" + "<body>\n" + "<h1>Hybrid Server</h1>\n");
+                            contentBuilder.append("<h2>Resource name not Valid</h2>\n");
+                            contentBuilder.append("</body>\n" + "</html>");
+
+                    }
 				}
 			}
 
-			contentBuilder.append("</body>");
-			contentBuilder.append("</html>");
 			response.setContent(String.valueOf(contentBuilder));
 			response.print(outputWriter);
 

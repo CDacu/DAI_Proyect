@@ -50,24 +50,6 @@ public class Launcher {
 				System.err.println("Exiting...");
 				System.exit(1);
 		}
-
 		server.start();
 	}
 }
-
-//		IMPLEMENTACION LECTURA DEL FICHERO config.conf
-//
-//				Properties properties = new Properties();
-//				try(FileInputStream fileInputStream = new FileInputStream(args[0])) {
-//					properties.load(fileInputStream);
-//				} catch (FileNotFoundException e) {
-//					System.err.println("An error ocurred, file doesn't exist");
-//					System.err.println("Exiting...");
-//					System.exit(1);
-//				} catch (IOException e) {
-//					System.err.println("An error ocurred reading the configuration parameters");
-//					e.printStackTrace();
-//					System.err.println("Exiting...");
-//					System.exit(1);
-//				}
-//				server = new HybridServer(properties);
