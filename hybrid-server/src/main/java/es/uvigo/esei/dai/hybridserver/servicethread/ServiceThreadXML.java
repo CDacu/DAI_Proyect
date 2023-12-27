@@ -13,6 +13,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
@@ -63,18 +64,11 @@ public class ServiceThreadXML extends AbstractServiceThread implements Runnable{
         try {
             String pageContent = pages.get(request.getResourceParameters().get("uuid"), type);
 
-            System.out.println("Checkpoint 1");
-
             if (request.getResourceParameters().get("xslt") != null) {
 
-                System.out.println(request.getResourceParameters().get("xslt"));
-
                 String xsltContent = pages.get(request.getResourceParameters().get("xslt"), HTTPResourceName.XSLT);
-                String xsdUUID = pages.getXSDUUID(request.getResourceParameters().get("xslt"), HTTPResourceName.XSLT);
-                // TODO: No esta encontrando el uuid, cuando este deberia estar
+                String xsdUUID = pages.getXSDUUIDwithXSLT(request.getResourceParameters().get("xslt"), HTTPResourceName.XSLT);
                 String xsdContent = pages.get(xsdUUID, HTTPResourceName.XSD);
-
-                System.out.println("Checkpoint 2");
 
                 SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
                 Schema schema = schemaFactory.newSchema(new StreamSource(new StringReader(xsdContent)));
@@ -88,16 +82,15 @@ public class ServiceThreadXML extends AbstractServiceThread implements Runnable{
                 documentBuilder.setErrorHandler(new DefaultHandler());
                 documentBuilder.parse(new InputSource(new StringReader(pageContent)));
 
-                System.out.println("Checkpoint 3");
-
                 TransformerFactory transformerFactory = TransformerFactory.newInstance();
                 Transformer transformer = transformerFactory.newTransformer(new StreamSource(new StringReader(xsltContent)));
                 StringWriter stringWriter = new StringWriter();
 
                 transformer.transform(new StreamSource(new StringReader(pageContent)), new StreamResult(stringWriter));
+                // TODO : Esto deberia fallar
 
                 response.setStatus(HTTPResponseStatus.S200);
-                response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(), MIME.APPLICATION_XML.getMime());
+                response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(), MIME.TEXT_HTML.getMime());
                 contentBuilder.append(stringWriter);
 
             } else {

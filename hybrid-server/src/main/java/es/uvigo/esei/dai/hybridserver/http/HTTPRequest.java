@@ -1,17 +1,17 @@
 /**
  *  HybridServer
  *  Copyright (C) 2023 Miguel Reboiro-Jato
- *
+ *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *
+ *  
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *
+ *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -20,161 +20,223 @@ package es.uvigo.esei.dai.hybridserver.http;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class HTTPRequest {
 
-    private final HTTPRequestMethod method;
-    private final String resourceChain;
-    private final String resourceName;
-    private final String httpVersion;
-    private final Map<String, String> headerParameters;
-    private String[] resourcePath;
-    private Map<String, String> resourceParameters;
-    private String content;
+	private HTTPRequestMethod method;
+	private String resourceName;
+	private String resourceChain;
+	private String[] resourcePath;
+	private Map<String, String> resourceParam;
+	private Map<String, String> headerParam;
+	private String httpVer;
+	private int contLength;
+	private String content;
 
-    public HTTPRequest(Reader reader) throws IOException, HTTPParseException {
+	public HTTPRequest(Reader reader) throws IOException, HTTPParseException {
 
-        BufferedReader bufferedReader = new BufferedReader(reader);
-        String line = "";
+		String reqLine = "";
+		String[] resTemp = null;
+		String[] reqTemp = null;
+		String mthdTemp;
+		String[] resParamTmp;
+		String[] paramValueTmp;
+		String[] headerParamTmp;
+		char[] buffer = new char [4096];
+		int chrRead = 0;
+		boolean keepGoing = true;
 
-        // Method resourceChain HttpVersion
-        try {
-            line = bufferedReader.readLine();
-            String[] lineSplit = line.split(" ");
+		BufferedReader bufRead = new BufferedReader(reader);
 
-            this.method = HTTPRequestMethod.valueOf(lineSplit[0]);
+		try {
+			reqLine = bufRead.readLine();
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+		}
+		
+		// Stripping out the method field.
+		
+		reqTemp = reqLine.split(" ");
 
-            this.resourceChain = lineSplit[1];
+		if (reqTemp.length != 3) {
+			throw new HTTPParseException();
+		}
+		
+		mthdTemp = reqTemp[0]; // First field before the blank space. => Method
 
-            String[] resourceSplit = lineSplit[1].split("\\?");
-            this.resourceName = resourceSplit[0].replaceFirst("/", "");
+		switch (mthdTemp) {
+			case "HEAD":
+			this.method = HTTPRequestMethod.HEAD;
+			break;
 
-            if ((this.resourcePath = resourceName.split("/")).length == 1 && this.resourcePath[0].isBlank()) {
-                this.resourcePath = new String[0];
+		case "GET":
+			this.method = HTTPRequestMethod.GET;
+			break;
+
+		case "POST":
+			this.method = HTTPRequestMethod.POST;
+			break;
+
+		case "PUT":
+			this.method = HTTPRequestMethod.PUT;
+			break;
+
+		case "DELETE":
+			this.method = HTTPRequestMethod.DELETE;
+			break;
+
+		default:
+			throw new HTTPParseException();
+		}
+
+		this.httpVer = reqTemp[2];
+
+		// Stripping out the resource field
+		this.resourceChain = reqTemp[1];
+		
+		resTemp = reqTemp[1].split("\\?");
+		this.resourceName = resTemp[0].replaceFirst("/", "");
+
+		if ((this.resourcePath = resourceName.split("/")).length == 1 && this.resourcePath[0].isBlank()) {
+			this.resourcePath = new String[0];
+		}
+
+		resourceParam = new LinkedHashMap<>();
+
+		if (resTemp.length > 1) {
+
+			// Only grab the parameters, each value of the array looks like: paramN=valueN
+			resParamTmp = resTemp[1].split("&");
+
+            for (String s : resParamTmp) {
+                paramValueTmp = s.split("="); // paramValueTmp is a size=2 array, pVT[0] is the key and
+                // pVT[1] is the value
+                resourceParam.put(paramValueTmp[0], paramValueTmp[1]);
             }
+		}
 
-            resourceParameters = new LinkedHashMap<>();
-            if (resourceSplit.length > 1) {
-                String[] resourceSplitParameters = resourceSplit[1].split("&");
-                String[] temporal;
+		headerParam = new LinkedHashMap<>();
 
-                for (String resource : resourceSplitParameters) {
-                    temporal = resource.split("=");
-                    resourceParameters.put(temporal[0], temporal[1]);
-                }
-            }
+		reqLine = bufRead.readLine();
+		
 
-            this.httpVersion = lineSplit[2];
 
-        } catch (IOException e) {
-            throw new IOException("An error ocurred while reading the HTTPResquest Header");
+		while ( keepGoing ) {
 
-        } catch (Exception e) {
-            throw new HTTPParseException("An error ocurred while parsing the HTTPResquest Header");
-        }
+			headerParamTmp = reqLine.split(": ");
 
-        //Header parameters
-        headerParameters = new LinkedHashMap<>();
-        try {
-            while (bufferedReader.ready() && !(line = bufferedReader.readLine()).isEmpty()) {
-                String[] temporal = line.split(": ");
-                this.headerParameters.put(temporal[0], temporal[1]);
-            }
-        } catch (IOException e) {
-            throw new IOException("An error ocurred while reading the HTTPResquest Header Parameters");
+			if (headerParamTmp.length != 2 && !headerParamTmp[0].isBlank() && this.contLength == 0) {
+				throw new HTTPParseException();
+			} else {
 
-        } catch (Exception e) {
-            throw new HTTPParseException("An error ocurred while parsing the HTTPResquest Header Parameters");
-        }
+				if (headerParamTmp.length == 2) {
 
-        //Content + PostEncode
-        if (headerParameters.containsKey(HTTPHeaders.CONTENT_LENGTH.getHeader())
-                && headerParameters.get(HTTPHeaders.CONTENT_TYPE.getHeader()) != null) {
-            try {
-                char[] readBuffer = new char[this.getContentLength()];
-                bufferedReader.read(readBuffer, 0, readBuffer.length);
+					if (headerParamTmp[0].equalsIgnoreCase(HTTPHeaders.CONTENT_LENGTH.getHeader())) {
 
-                this.content = String.valueOf(readBuffer);
+						this.contLength = Integer.parseInt(headerParamTmp[1]);
+					}
 
-                if (this.method.equals(HTTPRequestMethod.POST)) {
-                    this.resourceParameters = new LinkedHashMap<>();
-                    String[] contentSplit = this.content.split("&");
-                    String[] temporal;
-                    for (String contentLine : contentSplit) {
-                        temporal = contentLine.split("=");
-                        this.resourceParameters.put(temporal[0], URLDecoder.decode(temporal[1], StandardCharsets.UTF_8));
-                    }
+					headerParam.put(headerParamTmp[0], headerParamTmp[1]);
+				} else {
+					
+					//The only scenario where we'll get a blank its if we reach EOF or before the content
+					if ( headerParamTmp[0].isBlank() ) {
+						
+						//If theres content, it will read it all before setting the flag to continue to false						
+						if ( this.contLength > 0 ) {
+							
+							this.content = "";
+							
+							while( chrRead != this.contLength ){
+								
+								if( this.contLength > 4096 ) {
+									chrRead += bufRead.read(buffer, chrRead, 4096);
+								}else {
+									chrRead += bufRead.read(buffer, chrRead, (this.contLength - chrRead));
+								}
+								
+								reqLine = String.valueOf(buffer).trim();
+								
+								this.content += java.net.URLDecoder.decode(reqLine, StandardCharsets.UTF_8);
+								resParamTmp = this.content.split("&");
 
-                    if (headerParameters.get(HTTPHeaders.CONTENT_TYPE.getHeader()).equals(MIME.FORM.getMime())) {
-                        this.content = URLDecoder.decode(this.content, StandardCharsets.UTF_8);
-                    }
-                }
-            } catch (IOException e) {
-                throw new IOException("An error ocurred while reading the HTTPResquest Content");
+                                for (String s : resParamTmp) {
+                                    paramValueTmp = s.split("=");
+                                    resourceParam.put(paramValueTmp[0], paramValueTmp[1]);
+                                }
+							}
+						}
+						
+						//after reading all the content if there was any, or if there was no content it means its the end
+						//so either way we'll set the flag to false
+						
+						keepGoing = false;
+					} else {
+						throw new HTTPParseException();
+					}
+				}
+			}
 
-            } catch (Exception e) {
-                throw new HTTPParseException("An error ocurred while parsing the HTTPResquest Content");
-            }
-        }
-    }
+			if ( keepGoing ) {
+				reqLine = bufRead.readLine();
+			}
+		}
+	}
 
-    public HTTPRequestMethod getMethod() {
-        return method;
-    }
+	public HTTPRequestMethod getMethod() {
+		return this.method;
+	}
 
-    public String getResourceChain() {
-        return resourceChain;
-    }
+	public String getResourceChain() {
+		return this.resourceChain;
+	}
 
-    public String[] getResourcePath() {
-        return resourcePath;
-    }
+	public String[] getResourcePath() {
+		return this.resourcePath;
+	}
 
-    public String getResourceName() {
-        return resourceName;
-    }
+	public String getResourceName() {
+		return this.resourceName;
+	}
 
-    public Map<String, String> getResourceParameters() {
-        return resourceParameters;
-    }
+	public Map<String, String> getResourceParameters() {
 
-    public String getHttpVersion() {
-        return httpVersion;
-    }
+		return this.resourceParam;
+	}
 
-    public Map<String, String> getHeaderParameters() {
-        return headerParameters;
-    }
+	public String getHttpVersion() {
+		return this.httpVer;
+	}
 
-    public String getContent() {
-        return content;
-    }
+	public Map<String, String> getHeaderParameters() {
+		return this.headerParam;
+	}
 
-    public int getContentLength() {
-        if (headerParameters.containsKey(HTTPHeaders.CONTENT_LENGTH.getHeader())) {
-            return Integer.parseInt(headerParameters.get(HTTPHeaders.CONTENT_LENGTH.getHeader()));
-        } else {
-            return 0;
-        }
-    }
+	public String getContent() {
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder().append(this.getMethod().name()).append(' ')
-                .append(this.getResourceChain()).append(' ').append(this.getHttpVersion()).append("\r\n");
+		return this.content;
+	}
 
-        for (Map.Entry<String, String> param : this.getHeaderParameters().entrySet()) {
-            sb.append(param.getKey()).append(": ").append(param.getValue()).append("\r\n");
-        }
+	public int getContentLength() {
+		return this.contLength;
+	}
 
-        if (this.getContentLength() > 0) {
-            sb.append("\r\n").append(this.getContent());
-        }
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder().append(this.getMethod().name()).append(' ')
+				.append(this.getResourceChain()).append(' ').append(this.getHttpVersion()).append("\r\n");
 
-        return sb.toString();
-    }
+		for (Map.Entry<String, String> param : this.getHeaderParameters().entrySet()) {
+			sb.append(param.getKey()).append(": ").append(param.getValue()).append("\r\n");
+		}
+
+		if (this.getContentLength() > 0) {
+			sb.append("\r\n").append(this.getContent());
+		}
+
+		return sb.toString();
+	}
 }

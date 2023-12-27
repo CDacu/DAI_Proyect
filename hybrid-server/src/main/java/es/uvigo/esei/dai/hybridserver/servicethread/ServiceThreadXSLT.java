@@ -82,7 +82,7 @@ public class ServiceThreadXSLT extends AbstractServiceThread implements Runnable
         } else {
             boolean valid = false;
             try {
-                String xsdContent = pages.getXSDUUID(xsd, HTTPResourceName.XSLT);
+                String xsdContent = pages.getXSDUUIDwithXSD(xsd, HTTPResourceName.XSLT);
                 valid = true;
             } catch (PageNotFoundException e) {
                 response.setStatus(HTTPResponseStatus.S404);

@@ -43,8 +43,12 @@ public class DaoDBServerController implements DaoDBController {
     }
 
     @Override
-    public String getXSDUUID(String uuid, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException {
-        return page.getXSDUUID(uuid, table);
+    public String getXSDUUIDwithXSD(String uuid, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException {
+        return page.getXSDUUIDwithXSD(uuid, table);
+    }
+
+    public String getXSDUUIDwithXSLT(String uuid, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException {
+        return page.getXSDUUIDwithXSLT(uuid, table);
     }
 
 }

@@ -17,5 +17,6 @@ public interface DaoDBController {
 
     String create(String xsd, String content) throws DatabaseOfflineException;
 
-    String getXSDUUID(String xslt, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException;
+    String getXSDUUIDwithXSD(String xslt, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException;
+    String getXSDUUIDwithXSLT(String xslt, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException;
 }
