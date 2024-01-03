@@ -3,6 +3,7 @@ package es.uvigo.esei.dai.hybridserver.servicethread;
 import es.uvigo.esei.dai.hybridserver.configuration.Configuration;
 import es.uvigo.esei.dai.hybridserver.exception.DatabaseOfflineException;
 import es.uvigo.esei.dai.hybridserver.exception.PageNotFoundException;
+import es.uvigo.esei.dai.hybridserver.exception.SimpleErrorHandler;
 import es.uvigo.esei.dai.hybridserver.http.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -12,10 +13,7 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
@@ -24,7 +22,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.Socket;
-import java.util.UUID;
 
 public class ServiceThreadXML extends AbstractServiceThread implements Runnable{
     public ServiceThreadXML(Socket socket, Configuration configuration, HTTPResponse response, HTTPRequest request, StringBuilder contentBuilder) {
@@ -79,15 +76,14 @@ public class ServiceThreadXML extends AbstractServiceThread implements Runnable{
                 documentBuilderFactory.setSchema(schema);
 
                 DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-                documentBuilder.setErrorHandler(new DefaultHandler());
+                documentBuilder.setErrorHandler(new SimpleErrorHandler());
                 documentBuilder.parse(new InputSource(new StringReader(pageContent)));
 
                 TransformerFactory transformerFactory = TransformerFactory.newInstance();
                 Transformer transformer = transformerFactory.newTransformer(new StreamSource(new StringReader(xsltContent)));
-                StringWriter stringWriter = new StringWriter();
 
+                StringWriter stringWriter = new StringWriter();
                 transformer.transform(new StreamSource(new StringReader(pageContent)), new StreamResult(stringWriter));
-                // TODO : Esto deberia fallar
 
                 response.setStatus(HTTPResponseStatus.S200);
                 response.putParameter(HTTPHeaders.CONTENT_TYPE.getHeader(), MIME.TEXT_HTML.getMime());
