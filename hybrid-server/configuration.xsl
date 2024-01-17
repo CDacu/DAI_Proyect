@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<stylesheet version="1.0"
+<xsl:stylesheet version="1.0"
             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
             xmlns:c="http://www.esei.uvigo.es/dai/hybridserver">
 
@@ -47,4 +47,4 @@
         <p>httpAddress: <xsl:value-of select="@httpAddress"/></p>
     </xsl:template>
 
-</stylesheet>
+</xsl:stylesheet>

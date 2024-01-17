@@ -3,12 +3,14 @@ package es.uvigo.esei.dai.hybridserver.dao;
 import es.uvigo.esei.dai.hybridserver.exception.DatabaseOfflineException;
 import es.uvigo.esei.dai.hybridserver.exception.PageNotFoundException;
 import es.uvigo.esei.dai.hybridserver.http.HTTPResourceName;
+import jakarta.jws.WebService;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@WebService(endpointInterface = "es.uvigo.esei.dai.hybridserver.dao.AbstractDaoDB")
 public abstract class AbstractDaoDB {
     protected String dbURL, dbUser, dbPasswd;
     protected HTTPResourceName type;
@@ -49,11 +51,11 @@ public abstract class AbstractDaoDB {
         }
     }
 
-    public List<String> list() throws DatabaseOfflineException {
+    public List<String> list(HTTPResourceName table) throws DatabaseOfflineException {
 
         try (Connection connection = DriverManager.getConnection(dbURL, dbUser, dbPasswd)) {
 
-            try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM "+ type.getType())) {
+            try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM "+ table.getType())) {
                 List<String> pages = new ArrayList<>();
 
                 ResultSet result = statement.executeQuery();
@@ -71,11 +73,11 @@ public abstract class AbstractDaoDB {
         }
     }
 
-    public void delete(String uuid) throws DatabaseOfflineException, PageNotFoundException {
+    public void delete(String uuid, HTTPResourceName table) throws DatabaseOfflineException, PageNotFoundException {
 
         try (Connection connection = DriverManager.getConnection(dbURL, dbUser, dbPasswd)) {
 
-            try (PreparedStatement statement = connection.prepareStatement("DELETE FROM "+ type.getType() +" WHERE uuid=?")) {
+            try (PreparedStatement statement = connection.prepareStatement("DELETE FROM "+ table.getType() +" WHERE uuid=?")) {
                 statement.setString(1, uuid);
 
                 if (statement.executeUpdate() != 1) {
@@ -90,12 +92,12 @@ public abstract class AbstractDaoDB {
         }
     }
 
-    public String create(String content) throws DatabaseOfflineException {
+    public String create(String content, HTTPResourceName table) throws DatabaseOfflineException {
 
         try (Connection connection = DriverManager.getConnection(dbURL, dbUser, dbPasswd)) {
 
             try (PreparedStatement statement = connection
-                    .prepareStatement("INSERT INTO "+ type.getType() +" (uuid, content) " + "VALUES (?, ?)")) {
+                    .prepareStatement("INSERT INTO "+ table.getType() +" (uuid, content) " + "VALUES (?, ?)")) {
 
                 UUID uuid = UUID.randomUUID();
                 String uuidString = uuid.toString();
@@ -119,7 +121,7 @@ public abstract class AbstractDaoDB {
 
     // Este no tienen implementacion por defecto, dado que unicamente deben ser usados en XSLT
 
-    public String create(String xsd, String content) throws DatabaseOfflineException {
+    public String create(String xsd, String content, HTTPResourceName table) throws DatabaseOfflineException {
         return null;
     }
 

@@ -17,12 +17,12 @@
  */
 package es.uvigo.esei.dai.hybridserver.configuration;
 
+import es.uvigo.esei.dai.hybridserver.exception.SimpleErrorHandler;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -46,7 +46,7 @@ public class XMLConfigurationLoader {
     documentBuilderFactory.setSchema(schema);
 
     DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-    documentBuilder.setErrorHandler(new DefaultHandler());
+    documentBuilder.setErrorHandler(new SimpleErrorHandler());
 
     Document configuration = documentBuilder.parse(new InputSource(reader));
 

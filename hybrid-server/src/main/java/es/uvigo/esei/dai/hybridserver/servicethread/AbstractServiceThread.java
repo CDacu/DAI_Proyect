@@ -103,7 +103,7 @@ public abstract class AbstractServiceThread implements Runnable{
 
     protected void executeGETwithoutUUID(){
             try{
-                List<String> uuids = pages.list();
+                List<String> uuids = pages.list(type);
                 contentBuilder.append("<h2>Existing uuids</h2><ul>");
                 for (String uuid : uuids) {
                     contentBuilder.append("<li><a href=\"http://localhost:").append(this.socket.getLocalPort())
@@ -134,7 +134,7 @@ public abstract class AbstractServiceThread implements Runnable{
             closeHTMLHeader();
         }else{
             try {
-                uuidPage = pages.create(pageContent);
+                uuidPage = pages.create(pageContent, type);
                 response.setStatus(HTTPResponseStatus.S200);
                 String hyperlink = "<a href=\"" + type.getType().toLowerCase() + "?uuid=" + uuidPage + "\">" + uuidPage + "</a>";
                 contentBuilder.append(hyperlink);
@@ -158,8 +158,8 @@ public abstract class AbstractServiceThread implements Runnable{
         String uuidPage = request.getResourceParameters().get("uuid");
 
         try {
-            if( pages.list().contains(uuidPage)) {
-                pages.delete(uuidPage);
+            if( pages.list(type).contains(uuidPage)) {
+                pages.delete(uuidPage, type);
                 response.setStatus(HTTPResponseStatus.S200);
                 contentBuilder.append("<h2>Page with uuid: ").append(uuidPage).append(" deleted successfully</h2>");
 

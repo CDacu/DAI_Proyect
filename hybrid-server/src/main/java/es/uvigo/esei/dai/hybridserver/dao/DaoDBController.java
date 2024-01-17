@@ -9,14 +9,15 @@ import java.util.List;
 public interface DaoDBController {
     String get(String uuid, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException;
 
-    List<String> list() throws DatabaseOfflineException;
+    List<String> list(HTTPResourceName table) throws DatabaseOfflineException;
 
-    void delete(String uuid) throws PageNotFoundException, DatabaseOfflineException;
+    void delete(String uuid, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException;
 
-    String create(String content) throws DatabaseOfflineException;
+    String create(String content, HTTPResourceName table) throws DatabaseOfflineException;
 
-    String create(String xsd, String content) throws DatabaseOfflineException;
+    String create(String xsd, String content, HTTPResourceName table) throws DatabaseOfflineException;
 
     String getXSDUUIDwithXSD(String xslt, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException;
+
     String getXSDUUIDwithXSLT(String xslt, HTTPResourceName table) throws PageNotFoundException, DatabaseOfflineException;
 }

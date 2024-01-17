@@ -1,6 +1,6 @@
 <schema xmlns="http://www.w3.org/2001/XMLSchema"
-        targetNamespace="http://www.esei.uvigo.es/dai/hybridserver"
         xmlns:tns="http://www.esei.uvigo.es/dai/hybridserver"
+        targetNamespace="http://www.esei.uvigo.es/dai/hybridserver"
         elementFormDefault="qualified">
 
     <element name="configuration">

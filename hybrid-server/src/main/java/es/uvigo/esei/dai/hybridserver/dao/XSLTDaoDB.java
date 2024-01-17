@@ -13,11 +13,11 @@ public class XSLTDaoDB extends AbstractDaoDB {
         super(configuration.getDbURL(), configuration.getDbUser(), configuration.getDbPassword(), HTTPResourceName.XSLT);
     }
 
-    public String create(String xsd, String content) throws DatabaseOfflineException {
+    public String create(String xsd, String content, HTTPResourceName table) throws DatabaseOfflineException {
         try (Connection connection = DriverManager.getConnection(dbURL, dbUser, dbPasswd)) {
 
             try (PreparedStatement statement = connection
-                    .prepareStatement("INSERT INTO XSLT (uuid, xsd, content) " + "VALUES (?, ?, ?)")) {
+                    .prepareStatement("INSERT INTO "+ table.getType() +" (uuid, xsd, content) " + "VALUES (?, ?, ?)")) {
 
                 UUID uuid = UUID.randomUUID();
                 String uuidString = uuid.toString();

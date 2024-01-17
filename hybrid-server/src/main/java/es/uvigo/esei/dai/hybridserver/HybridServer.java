@@ -19,6 +19,9 @@ package es.uvigo.esei.dai.hybridserver;
 
 import es.uvigo.esei.dai.hybridserver.configuration.Configuration;
 import es.uvigo.esei.dai.hybridserver.servicethread.ServiceThread;
+import es.uvigo.esei.dai.hybridserver.webservice.HybridServerService;
+import es.uvigo.esei.dai.hybridserver.webservice.HybridServerServiceImpl;
+import jakarta.xml.ws.Endpoint;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -35,14 +38,18 @@ public class HybridServer implements AutoCloseable {
 	private boolean stop;
 	private final Configuration configuration;
 	private ExecutorService threadPool;
+	private Endpoint serviceEndpoint;
+	private HybridServerService pagesWebService;
 
 	public HybridServer() {
 		this.configuration = new Configuration();
+		pagesWebService = new HybridServerServiceImpl(configuration);
 		System.out.println("Starting the server with the default parameters");
 	}
 
 	public HybridServer(Configuration configuration){
 		this.configuration = configuration;
+		pagesWebService = new HybridServerServiceImpl(configuration);
 		System.out.println("Starting the server with the configuration parameters");
 	}
 
@@ -80,7 +87,8 @@ public class HybridServer implements AutoCloseable {
         }
 
 		this.configuration = new Configuration(httpPort, numClients, null, dbUser, dbPasswd, dbURL, new ArrayList<>());
-		System.out.println("Starting the server with the configuration parameters");
+		pagesWebService = new HybridServerServiceImpl(configuration);
+		System.out.println("Starting the server with the 'fake' configuration parameters");
 	}
 
 	public int getPort() {
@@ -88,6 +96,13 @@ public class HybridServer implements AutoCloseable {
 	}
 
 	public void start() {
+		try{
+			serviceEndpoint = Endpoint.publish(configuration.getWebServiceURL(), pagesWebService);
+		}catch (Exception e){
+			System.err.println("WARNING: Something went wrong publishing the web service");
+			e.printStackTrace();
+		}
+
 		this.serverThread = new Thread() {
 			@Override
 			public void run() {
@@ -112,6 +127,9 @@ public class HybridServer implements AutoCloseable {
 	@Override
 	public void close() {
 		this.stop = true;
+
+		try{serviceEndpoint.stop();}
+		catch (NullPointerException e){}
 
 		try (Socket socket = new Socket("localhost", this.configuration.getHttpPort())) {
 			// Esta conexión se hace, simplemente, para "despertar" el hilo servidor

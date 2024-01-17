@@ -99,7 +99,7 @@ public class ServiceThreadXSLT extends AbstractServiceThread implements Runnable
 
             if (valid) {
                 try {
-                    uuidPage = pages.create(xsd, pageContent);
+                    uuidPage = pages.create(xsd, pageContent, type);
                     response.setStatus(HTTPResponseStatus.S200);
                     String hyperlink = "<a href=\"" + type.getType().toLowerCase() + "?uuid=" + uuidPage + "\">" + uuidPage + "</a>";
                     contentBuilder.append(hyperlink);
