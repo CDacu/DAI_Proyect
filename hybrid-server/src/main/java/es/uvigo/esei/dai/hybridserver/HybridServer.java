@@ -100,7 +100,6 @@ public class HybridServer implements AutoCloseable {
 			serviceEndpoint = Endpoint.publish(configuration.getWebServiceURL(), pagesWebService);
 		}catch (Exception e){
 			System.err.println("WARNING: Something went wrong publishing the web service");
-			e.printStackTrace();
 		}
 
 		this.serverThread = new Thread() {

@@ -35,13 +35,13 @@ public class DaoDBServerController implements DaoDBController {
         if(content != null){
             return content;
 
-        }else{
+        }else if(!configuration.getServers().isEmpty()){
             try{
                 for (ServerConfiguration server : configuration.getServers()){
                     try{
                         URL url = new URL(server.getWsdl());
-                        QName namespace = new QName(server.getNamespace(), server.getService());
-                        Service service = Service.create(url, namespace);
+                        QName qname = new QName(server.getNamespace(), server.getService());
+                        Service service = Service.create(url, qname);
                         HybridServerService pagesWebService = service.getPort(HybridServerService.class);
 
                         content = pagesWebService.get(uuid, table);
@@ -57,10 +57,8 @@ public class DaoDBServerController implements DaoDBController {
             }catch (Exception e){
                 //Por si acaso, es un try con recursos
             }
-            throw new PageNotFoundException();
         }
-
-
+        throw new PageNotFoundException();
     }
 
     @Override
@@ -68,22 +66,25 @@ public class DaoDBServerController implements DaoDBController {
 
         List<String> toRet = page.list(table);
 
-        try{
-            for (ServerConfiguration server : configuration.getServers()){
-                try{
-                    URL url = new URL(server.getWsdl());
-                    QName namespace = new QName(server.getNamespace(), server.getService());
-                    Service service = Service.create(url, namespace);
-                    HybridServerService pagesWebService = service.getPort(HybridServerService.class);
+        if(!configuration.getServers().isEmpty()){
+            try{
+                for (ServerConfiguration server : configuration.getServers()){
+                    try{
+                        URL url = new URL(server.getWsdl());
+                        QName namespace = new QName(server.getNamespace(), server.getService());
+                        Service service = Service.create(url, namespace);
+                        HybridServerService pagesWebService = service.getPort(HybridServerService.class);
 
-                    toRet.addAll(Arrays.asList(pagesWebService.list(table)));
+                        toRet.addAll(Arrays.asList(pagesWebService.list(table)));
 
-                }catch (Exception e){
+                    }catch (Exception e){
                         System.err.println("WARNING: An error ocurred while connecting to the remote server "+server.getName());
+                        e.printStackTrace();
+                    }
                 }
-            }
-        }catch (Exception e){
+            }catch (Exception e){
                 //Por si acaso, es un try con recursos
+            }
         }
         return toRet;
     }
@@ -119,7 +120,7 @@ public class DaoDBServerController implements DaoDBController {
         if(xsd != null){
             return xsd;
 
-        }else {
+        }else if(!configuration.getServers().isEmpty()){
             try {
                 for (ServerConfiguration server : configuration.getServers()) {
                     try {
@@ -142,8 +143,7 @@ public class DaoDBServerController implements DaoDBController {
             } catch (Exception e) {
                 //Por si acaso, es un try con recursos
             }
-            throw new PageNotFoundException();
         }
-
+        throw new PageNotFoundException();
     }
 }

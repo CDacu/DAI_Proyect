@@ -26,6 +26,40 @@ public class Launcher {
 
 	public static void main(String[] args) {
 
+//-------------------------------------------------------------------------------------------------------------------
+//		Launcher +1 servidor
+
+//		HybridServer[] servers = null;
+//
+//		if(args.length == 0){
+//			servers = new HybridServer[1];
+//			servers[0] = new HybridServer();
+//		}else{
+//			servers = new HybridServer[args.length];
+//			Configuration configuration;
+//			for (int i = 0; i < args.length; i++){
+//				try {
+//					configuration = new XMLConfigurationLoader().load(new FileReader(args[i]));
+//					servers[i] = new HybridServer(configuration);
+//				} catch (Exception e) {
+//					System.err.println("An error ocurred reading the configuration parameters number "+ i);
+//					System.out.println("Configuration Parameters should be: ");
+//					System.out.println("configuration1.xml ... configurationN.xml or nothing for default init");
+//					e.printStackTrace();
+//					System.err.println("Exiting...");
+//					System.exit(1);
+//				}
+//			}
+//		}
+//
+//		for (HybridServer server : servers){
+//			server.start();
+//		}
+
+
+//-------------------------------------------------------------------------------------------------------------------
+//		Launcher 1 servidor
+
 		HybridServer server = null;
 
 		switch (args.length) {
@@ -51,5 +85,6 @@ public class Launcher {
 				System.exit(1);
 		}
 		server.start();
+
 	}
 }
